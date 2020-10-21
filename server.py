@@ -1,36 +1,43 @@
-import socket
-import threading
-import const
+import socket, threading, argparse
 
-# create a socket instance type AF_INET, with stream data type (TCP protocol)
+DATA_SIZE = 1024
+SERVER = "0.0.0.0"
+
+# use parser
+parser = argparse.ArgumentParser(description='Perform a server request.')
+parser.add_argument(
+    'port', 
+    metavar="port", 
+    help='Port number used for connection. [8000]', 
+    type=int)
+args = parser.parse_args()
+
+# server setup
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-# bind socket to defined addres
-server.bind(const.ADDR)
+server_addr = (SERVER, args.port)
+server.bind(server_addr)
 
 
-def handleClient(conn, addr):
-    print(f"[NEW CONNECTION] {addr} connected")
-    connected = True
-    while connected:
-        msg_length = conn.recv(const.HEADER).decode(const.FORMAT)
-        if msg_length:
-            msg_length = int(msg_length)
-            msg = conn.recv(msg_length).decode(const.FORMAT)
-            if msg == const.DISCONNECT_MESSAGE:
-                connected = False
-            print(f"[{addr}] {msg}")
+def handleClient(conn: socket.socket, addr: tuple):
+    """Handle file receving from client."""
+    print(f"[NEW CONNECTION]: {addr}")
+    # receive file
+    with open('received_file.txt', 'wb') as f:
+        data = conn.recv(DATA_SIZE)
+        while data:
+            print(f"[RECEVING]: {DATA_SIZE} bytes from {addr}")
+            f.write(data)
+            data = conn.recv(DATA_SIZE)
+    print(f"[FINISHED]: closing connection with {addr}")
     conn.close()
 
-
-def start():
-    """Start server and handle new connections using threading."""
+def startServer():
+    """Start server and handle new connections using threads."""
     server.listen()
-    print(f"[LISTENING]: server up and running on {const.ADDR}")
+    print(f"[LISTENING]: server running on {server_addr}")
     while True:
         conn, addr = server.accept()
         thread = threading.Thread(target=handleClient, args=(conn, addr))
         thread.start()
-        print(f"[ACTIVE CONNECTOINS]: {threading.activeCount() - 1}")
 
-
-start()
+startServer()

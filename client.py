@@ -1,15 +1,8 @@
-import socket
-import const
-import argparse
+import socket, argparse
 
-HEADER = 64
-PORT = 5050
-FORMAT = "utf-8"
-DISCONNECT_MESSAGE = "!DISCONNECT"
-SERVER = ""
-ADDR = (SERVER, PORT)
+DATA_SIZE = 1024
 
-# parser setup
+# use parser
 parser = argparse.ArgumentParser(description='Perform a server request.')
 parser.add_argument(
     'hostname', 
@@ -30,34 +23,24 @@ parser.add_argument(
     'files', 
     metavar="filename", 
     help='Filenames to get/post on server. [text1.txt test2.py]', 
-    nargs='*')
+    nargs='*') # TO DO: HANDLE THIS
+args = parser.parse_args()
 
-# socket setup
+# setup connection to server
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-client.connect(const.ADDR)
+addr = (args.hostname, args.port)
+client.connect(addr)
 
 
-def get_args() -> argparse.Namespace:
-    args = parser.parse_args()
-    # NOT SURE IF THIS IS THE RIGHT WAY TO HANDLE THIS
-    if(args.method != "list" and args.files == []):
-        raise ValueError("filename argument required for this method")
-    return args
+def sendFile(filename: str):
+    """Send a file to the server."""
+    with open(filename,'rb') as f:
+        data = f.read(DATA_SIZE)
+        while (data):
+            client.send(data)
+            print(f"[SENDING]: {DATA_SIZE} bytes to server")
+            data = f.read(DATA_SIZE)
+    print("[FINISHED]: closing connection")
 
 
-def send(msg):
-    # encode message into correct format
-    message = msg.encode(const.FORMAT)
-    # send message length
-    msg_len = len(message)
-    send_length = str(msg_len).encode(const.FORMAT)
-    send_length += b' ' * (const.HEADER - len(send_length))
-    client.send(send_length)
-    # send message itself
-    client.send(message)
-
-
-# get arguments
-print(get_args())
-
-send("Hello World!")
+sendFile("test.txt")

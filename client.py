@@ -1,4 +1,4 @@
-import socket, argparse
+import socket, argparse, utils
 
 DATA_SIZE = 1024
 
@@ -32,15 +32,4 @@ addr = (args.hostname, args.port)
 client.connect(addr)
 
 
-def sendFile(filename: str):
-    """Send a file to the server."""
-    with open(filename,'rb') as f:
-        data = f.read(DATA_SIZE)
-        while (data):
-            client.send(data)
-            print(f"[SENDING]: {DATA_SIZE} bytes to server")
-            data = f.read(DATA_SIZE)
-    print("[FINISHED]: closing connection")
-
-
-sendFile("test.txt")
+utils.sendFile("test.txt", client)

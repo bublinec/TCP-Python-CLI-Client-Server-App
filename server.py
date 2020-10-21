@@ -1,7 +1,4 @@
-import socket, threading, argparse
-
-DATA_SIZE = 1024
-SERVER = "0.0.0.0"
+import socket, threading, argparse, const, utils
 
 # use parser
 parser = argparse.ArgumentParser(description='Perform a server request.')
@@ -14,21 +11,15 @@ args = parser.parse_args()
 
 # server setup
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-server_addr = (SERVER, args.port)
+server_addr = (const.DEFAULT_SERVER, args.port)
 server.bind(server_addr)
 
 
 def handleClient(conn: socket.socket, addr: tuple):
-    """Handle file receving from client."""
+    """Handle connected client."""
     print(f"[NEW CONNECTION]: {addr}")
-    # receive file
-    with open('received_file.txt', 'wb') as f:
-        data = conn.recv(DATA_SIZE)
-        while data:
-            print(f"[RECEVING]: {DATA_SIZE} bytes from {addr}")
-            f.write(data)
-            data = conn.recv(DATA_SIZE)
-    print(f"[FINISHED]: closing connection with {addr}")
+    # do stuff
+    utils.receiveFile(conn)
     conn.close()
 
 def startServer():
